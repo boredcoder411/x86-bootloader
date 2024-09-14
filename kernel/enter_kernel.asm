@@ -21,9 +21,9 @@ keyboard_handler:
 
 enable_interrupts:
 	sti
-	iret
+	ret
 
 load_idt:
 	mov edx, [esp + 4]
 	lidt [edx]
-	iret
+	ret

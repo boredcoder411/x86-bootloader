@@ -32,5 +32,5 @@ static inline char make_color(vga_color fg, vga_color bg) {
 void k_put_char(char c, int x, int y, char color);
 void k_put_string(const char* str, int start_x, int start_y, char color);
 void k_clear_screen(char color);
-
+void print_hex(unsigned int value, int x, int y, char color);
 #endif  // VGA_H

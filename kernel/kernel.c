@@ -58,6 +58,7 @@ struct IDT_entry {
 struct IDT_entry IDT[IDT_SIZE];
 
 void init_idt() {
+	k_put_string("here", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	unsigned int offset = (unsigned int)keyboard_handler;
 	IDT[0x21].offset_lowerbits = offset & 0x0000ffff;
 	IDT[0x21].selector = KERNEL_CODE_SEGMENT_OFFSET;
@@ -66,29 +67,36 @@ void init_idt() {
 	IDT[0x21].offset_higherbits = (offset & 0xffff0000) >> 16;
 
 	// ICW1
+	k_put_string("here1", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	ioport_out(PIC1_COMMAND, ICW1);
 	ioport_out(PIC2_COMMAND, ICW1);
 
 	// ICW2, irq 0 to 7 is mapped to 0x20 to 0x27, irq 8 to F is mapped to 28 to 2F
+	k_put_string("here2", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	ioport_out(PIC1_DATA, 0x20);
 	ioport_out(PIC2_DATA, 0x28);
 
 	// ICW3, connect master pic with slave pic
+	k_put_string("here3", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	ioport_out(PIC1_DATA, 0x4);
 	ioport_out(PIC2_DATA, 0x2);
 
 	// ICW4, set x86 mode
+	k_put_string("here4", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	ioport_out(PIC1_DATA, 1);
 	ioport_out(PIC2_DATA, 1);
 
 	// clear the mask register
+	k_put_string("here5", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	ioport_out(PIC1_DATA, 0);
 	ioport_out(PIC2_DATA, 0);
 
 	struct IDT_pointer idt_ptr;
 	idt_ptr.limit = (sizeof(struct IDT_entry) * IDT_SIZE) - 1;
 	idt_ptr.base = (unsigned int)&IDT;
+	// kernel crashes at load_idt, proven by the fact that "here6" is not printed, only "here" to "here5"
 	load_idt((unsigned int*) &idt_ptr);
+	k_put_string("here6", 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 }
 
 void init_keyboard() {
@@ -101,7 +109,8 @@ void handle_keyboard_interrupt() {
 	if(status & 0x01) {
 		char keycode = ioport_in(KEYBOARD_DATA_PORT);
 		if(keycode < 0 || keycode >= 128) return;
-		k_put_char(keyboard_map[keycode], 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+		//k_put_char(keyboard_map[keycode], 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+		print_hex(keycode, 0, 8, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 	}
 	
 	return;

@@ -42,3 +42,18 @@ void k_clear_screen(char color) {
 	}
     }
 }
+
+void int_to_hex(unsigned int value, char* buffer) {
+    const char* hex_digits = "0123456789ABCDEF";
+    buffer[0] = hex_digits[(value >> 4) & 0xF]; // High nibble
+    buffer[1] = hex_digits[value & 0xF];        // Low nibble
+    buffer[2] = '\0'; // Null-terminate the string
+}
+
+// Function to print a hexadecimal representation of a byte (scancode) at a given position
+void print_hex(unsigned int value, int x, int y, char color) {
+    char hex_buffer[3];  // Buffer to hold the 2 hex digits plus null-terminator
+    int_to_hex(value, hex_buffer);  // Convert the value to hex string
+    k_put_string("0x", x, y, color);  // Print the '0x' prefix
+    k_put_string(hex_buffer, x + 2, y, color);  // Print the actual hex value
+}

@@ -46,7 +46,7 @@ load_kernel:
   call print_string
 
   mov bx, KERNEL_OFFSET   ; disk_load loads the first dh sectors from drive dl into memory at the
-  mov dh, 1               ; offset es:bx. In this case we do not need to use the extended segment
+  mov dh, 10              ; offset es:bx. In this case we do not need to use the extended segment
   mov dl, [BOOT_DRIVE]    ; because we do not need to reach that high into memory.
   call disk_load
 
