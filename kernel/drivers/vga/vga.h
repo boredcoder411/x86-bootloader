@@ -1,6 +1,3 @@
-#ifndef VGA_H
-#define VGA_H
-
 #include <stdint.h>  // For standard integer types
 
 // Define VGA colors
@@ -33,4 +30,3 @@ void k_put_char(char c, int x, int y, char color);
 void k_put_string(const char* str, int start_x, int start_y, char color);
 void k_clear_screen(char color);
 void print_hex(unsigned int value, int x, int y, char color);
-#endif  // VGA_H
