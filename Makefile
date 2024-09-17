@@ -1,6 +1,6 @@
 # Automatically generate lists of sources using wildcard.
-C_SOURCES = $(wildcard kernel/*.c kernel/drivers/vga/*.c drivers/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/drivers/vga/*.h drivers/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/drivers/vga/*.c drivers/*.c kernel/drivers/io/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/drivers/vga/*.h drivers/*.h kernel/drivers/io/*.h)
 
 # Convert *.c filenames to *.o as a list of object files to build.
 OBJ = ${C_SOURCES:.c=.o}
@@ -29,7 +29,8 @@ os-image: boot/load_kernel.bin kernel/kernel.bin
 
 # Compile assembly sources into binary.
 %.bin: %.asm
-	nasm $< -f bin -o $@
+	nasm $< -f bin -o $@ -D USE_GRAPHICS
+	#nasm $< -f bin -o $@
 
 # Assemble the kernel entry to an object file.
 %.o: %.asm
@@ -43,4 +44,4 @@ os-image: boot/load_kernel.bin kernel/kernel.bin
 
 # Run operating system on emulated x86.
 run: os-image
-	qemu-system-x86_64 -drive file=$<,format=raw -net none -no-reboot -no-shutdown -monitor stdio -icount shift=7
+	qemu-system-x86_64 -drive file=$<,format=raw -net none -no-reboot -no-shutdown -monitor stdio --enable-kvm
