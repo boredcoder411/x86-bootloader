@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "drivers/vga/vga.h"
+#include "drivers/io/io.h"
 
 #define IDT_SIZE 256
 #define KERNEL_CODE_SEGMENT_OFFSET 0x08
@@ -23,24 +24,7 @@
 
 extern void enable_interrupts();
 extern void keyboard_handler();
-//extern char ioport_in(unsigned short port);
-//extern void ioport_out(unsigned short port, unsigned char data);
 extern void load_idt(unsigned int* idt_address);
-
-void ioport_out(uint16_t port, uint8_t val)
-{
-    __asm__ volatile ( "outb %b0, %w1" : : "a"(val), "Nd"(port) : "memory");
-}
-
-char ioport_in(uint16_t port)
-{
-    uint8_t ret;
-    __asm__ volatile ( "inb %w1, %b0"
-                   : "=a"(ret)
-                   : "Nd"(port)
-                   : "memory");
-    return ret;
-}
 
 struct IDT_pointer {
 	unsigned short limit;
@@ -88,7 +72,7 @@ void init_idt() {
 	struct IDT_pointer idt_ptr;
 	idt_ptr.limit = (sizeof(struct IDT_entry) * IDT_SIZE) - 1;
 	idt_ptr.base = (unsigned int)&IDT;
-	// kernel crashes at load_idt, proven by the fact that "here6" is not printed, only "here" to "here5"
+	// kernel crashes at load_idt, proven by bochs
 	load_idt((unsigned int*) &idt_ptr);
 }
 
@@ -103,24 +87,26 @@ void handle_keyboard_interrupt() {
 	unsigned char keycode = ioport_in(KEYBOARD_DATA_PORT);
 		if (keycode < 128) {  // Valid keycode range
 			char key = kbdus[keycode];
-			k_put_char(key, 0, 0, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));  // Print the character
-			print_hex(keycode, 0, 8, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
+			//k_put_char(key, 0, 8, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));  // Print the character
+			//print_hex(keycode, 0, 9, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 		}
 	}
 	return;
 }
 
 void main() {
-	// Define a color with light cyan foreground and black background
-	char color = make_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-
-	// Print a string with newline support
-	k_put_string("Hello, World!\nWelcome to VGA text mode.", 0, 5, color);
-	
 	init_idt();
 	init_keyboard();
 	enable_interrupts();
+	screen_init();
 
+	// removed to test only the single plot_pixel function just below
+	/*for(int i = 0; i < 199; i++) {
+		for(int j = 0; j < 320; j++) {
+			plot_pixel(j, i, VGA_RED);
+		}
+	}*/
+	plot_pixel(0, 0, VGA_WHITE);
 	while (true) {}  // Infinite loop to prevent the program from exiting
 }
 

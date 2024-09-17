@@ -1,17 +1,13 @@
-;
-; A simple routine for entering the kernel at the function `main`.
-;
-
 global keyboard_handler
 global enable_interrupts
 global load_idt
 
-[bits 32]     ; We're in protected mode, so use 32-bit instructios.
-[extern main] ; Expect `main` to be defined in an assembly file assembled alongside this one.
+[bits 32]
+[extern main]
 [extern handle_keyboard_interrupt]
 
-jmp main      ; Enter the main function.
-jmp $         ; When control returns from the kernel, hang.
+jmp main
+jmp $
 
 keyboard_handler:
 	pushad

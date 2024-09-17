@@ -1,0 +1,6 @@
+megs: 128
+romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xfffe0000
+vgaromimage: file=/home/dev/VGABIOS/VGABIOS-lgpl-latest.bin
+floppya: 1_44=os-image, status=inserted
+boot: floppy
+mouse: enabled=0

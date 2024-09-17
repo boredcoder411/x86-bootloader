@@ -1,83 +1,96 @@
-;
-; A boot sector that will load the kernel from OS image on boot disk.
-;
-
-; BIOS loads boot sector code into memory offset 0x7c00.
 [org 0x7c00]
 
-KERNEL_OFFSET equ 0x1000  ; This it the memory offset into which we will load our kernel.
+KERNEL_OFFSET equ 0x1000
 
+mov [BOOT_DISK], dl
 
-  ; BIOS stores index of boot drive it discovered in dl. Hang on to this as we will need to read
-  ; from this drive later. Note that this variable is allocated in the globals section below.
-  mov [BOOT_DRIVE], dl
+mov bp, 0x9000
+mov sp, bp
 
-  mov bp, 0x9000          ; Set up the stack. This gives us 5 kB above the loaded boot sector
-  mov sp, bp              ; at 0x7c00 (there are 638 kB of free memory there).
+%ifdef USE_GRAPHICS
+call init_video_graphics
+%else
+call init_video_text
+%endif
 
-  mov bx, MSG_REAL_MODE   ; Print message indicating we are in real mode. It prints the null-
-  call print_string       ; terminated string whose start is pointed at by register dx.
+call load_kernel
 
-  call load_kernel        ; Uses BIOS interrupt to read kernel into memory
+call switch_to_pm
 
-  call switch_to_pm       ; Switch to protected mode, from which control will not return. After
-                          ; making the switch, we enter our 32-bit code at the offset BEGIN_PM.
+jmp $
 
-  jmp $
-
-
-; Includes
-%include "boot/print_string.asm"
-%include "boot/disk_load.asm"
+%include "boot/utils.inc"
 %include "boot/gdt.asm"
-%include "boot/switch_to_pm.asm"
-%include "boot/print_string_pm.asm"
+%include "boot/video.asm"
 
-
-; Since switch_to_pm changed our assembler encoding from 16-bit to 32-bit, switch it back to 16-bit
-; before writing the function for loading the kernel.
 [bits 16]
-
-; Load the kernel from disk into memory. Note we must read the correct number of sectors or
-; else we get a disc error.
 load_kernel:
+	mov bx, KERNEL_OFFSET
+	mov dh, 20 ; 20 sectors (10KB) for the kernel
+	mov dl, [BOOT_DISK]
+	call disk_load
+	ret
 
-  mov bx, MSG_LOAD_KERNEL ; Print message for kernel load.
-  call print_string
+[bits 16]
+switch_to_pm:
+	cli
+	enable_a20
+	lgdt [gdt_descriptor]
 
-  mov bx, KERNEL_OFFSET   ; disk_load loads the first dh sectors from drive dl into memory at the
-  mov dh, 10              ; offset es:bx. In this case we do not need to use the extended segment
-  mov dl, [BOOT_DRIVE]    ; because we do not need to reach that high into memory.
-  call disk_load
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
 
-  ret
+	jmp CODE_SEG:BEGIN_PM
 
+[bits 16]
+disk_load:
+	pusha
+
+	push dx
+
+	mov ah, 0x02
+	mov al, dh
+	mov ch, 0x00
+	mov dh, 0x00
+	mov cl, 0x02
+
+	int 0x13
+	
+	pop dx
+
+	popa
+
+	ret
 
 [bits 32]
+init_pm:
+	mov ax, DATA_SEG	; Now in PM, our segment register values from real mode are meaningless.
+				; So, we initialize all registers to point to the data segment offset.
 
+	mov ds, ax		; Data segment register (default offset for data addresses)
+	mov ss, ax		; Stack segment register (points to segment holding stack)
+	mov es, ax		; General-purpose register
+	mov fs, ax		; General-purpose register (e.g. for exception handling chain)
+	mov gs, ax		; General-purpose register
+
+	mov ebp, 0x90000	; Update our stack position so it is right at the top of free space. This
+	mov esp, ebp		; value is left-shifted by 3 since our code segment granularity is set to 1,
+				; thus the stack base is at physical address 0x9000000.
+
+	call BEGIN_PM		; Finally, call a well-known label which will be used at the start of the
+				; protected-mode code. This is the entry point for our 32-bit code and we
+				; will not return from it.
+
+[bits 32]
 BEGIN_PM:
+	call KERNEL_OFFSET
 
-  mov ebx, MSG_PROT_MODE  ; Print message indicating we are in real mode.
-  call print_string_pm
+	jmp $
 
-  call KERNEL_OFFSET      ; Begin executing the kernel.
+BOOT_DISK db 0x00
 
-  jmp $                   ; If return ever controls from the kernel, hang.
+; todo: partition table (lookup mbr scheme you idiot)
 
-
-; Global variables
-BOOT_DRIVE db 0x0
-
-MSG_REAL_MODE:            ; Include line feed/carriage return so next message doesn't overwrite.
-  db "started in 16-bit real mode", 0xa, 0xd, 0x0
-
-MSG_LOAD_KERNEL:
-  db "loading kernel into memory...", 0x0
-
-MSG_PROT_MODE:
-  db "successfully landed in 32-bit protected mode.", 0x0
-
-
-; Boot sector padding
-times 510-($-$$) db 0x0
+times 510-($-$$) db 0
 dw 0xaa55

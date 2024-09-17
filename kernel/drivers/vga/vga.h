@@ -1,32 +1,24 @@
 #include <stdint.h>  // For standard integer types
 
-// Define VGA colors
-typedef enum {
-    VGA_COLOR_BLACK = 0,
-    VGA_COLOR_BLUE = 1,
-    VGA_COLOR_GREEN = 2,
-    VGA_COLOR_CYAN = 3,
-    VGA_COLOR_RED = 4,
-    VGA_COLOR_MAGENTA = 5,
-    VGA_COLOR_BROWN = 6,
-    VGA_COLOR_LIGHT_GREY = 7,
-    VGA_COLOR_DARK_GREY = 8,
-    VGA_COLOR_LIGHT_BLUE = 9,
-    VGA_COLOR_LIGHT_GREEN = 10,
-    VGA_COLOR_LIGHT_CYAN = 11,
-    VGA_COLOR_LIGHT_RED = 12,
-    VGA_COLOR_LIGHT_MAGENTA = 13,
-    VGA_COLOR_LIGHT_BROWN = 14,
-    VGA_COLOR_WHITE = 15,
-} vga_color;
+#define COLOR(_r, _g, _b) ((unsigned char)((((_r) & 0x7) << 5) | (((_g) & 0x7) << 2) | (((_b) & 0x3) << 0)))
 
-// Inline function to create a color byte from foreground and background colors
-static inline char make_color(vga_color fg, vga_color bg) {
-    return (bg << 4) | (fg & 0x0F);
-}
+#define VGA_BLACK COLOR(0, 0, 0)
+#define VGA_WHITE COLOR(7, 7, 3)
+#define VGA_RED COLOR(7, 0, 0)
+#define VGA_GREEN COLOR(0, 7, 0)
+#define VGA_BLUE COLOR(0, 0, 3)
+#define VGA_YELLOW COLOR(7, 7, 0)
+#define VGA_MAGENTA COLOR(7, 0, 3)
+#define VGA_CYAN COLOR(0, 7, 3)
+
+#define PALETTE_MASK 0x3C6
+#define PALETTE_READ 0x3C7
+#define PALETTE_WRITE 0x3C8
+#define PALETTE_DATA 0x3C9
 
 // Function prototypes
-void k_put_char(char c, int x, int y, char color);
-void k_put_string(const char* str, int start_x, int start_y, char color);
+void k_put_char(char c, int x, int y, unsigned char color);
+void k_put_string(const char* str, int start_x, int start_y, unsigned char color);
 void k_clear_screen(char color);
-void print_hex(unsigned int value, int x, int y, char color);
+void plot_pixel(int x, int y, char color);
+void screen_init();
