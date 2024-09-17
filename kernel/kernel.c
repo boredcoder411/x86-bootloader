@@ -101,12 +101,11 @@ void main() {
 	screen_init();
 
 	// removed to test only the single plot_pixel function just below
-	/*for(int i = 0; i < 199; i++) {
+	for(int i = 0; i < 199; i++) {
 		for(int j = 0; j < 320; j++) {
 			plot_pixel(j, i, VGA_RED);
 		}
-	}*/
-	plot_pixel(0, 0, VGA_WHITE);
+	}
 	while (true) {}  // Infinite loop to prevent the program from exiting
 }
 

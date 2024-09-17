@@ -41,7 +41,7 @@ switch_to_pm:
 	or eax, 0x1
 	mov cr0, eax
 
-	jmp CODE_SEG:BEGIN_PM
+	jmp CODE_SEG:init_pm
 
 [bits 16]
 disk_load:
