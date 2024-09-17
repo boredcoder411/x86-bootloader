@@ -26,6 +26,17 @@ extern void enable_interrupts();
 extern void keyboard_handler();
 extern void load_idt(unsigned int* idt_address);
 
+static const unsigned char letter_a[8] = {
+	0b00000000,
+	0b00000000,
+	0b00011000,
+	0b00100100,
+	0b00100100,
+	0b00111100,
+	0b00100100,
+	0b00000000
+};
+
 struct IDT_pointer {
 	unsigned short limit;
 	unsigned int base;
@@ -72,7 +83,6 @@ void init_idt() {
 	struct IDT_pointer idt_ptr;
 	idt_ptr.limit = (sizeof(struct IDT_entry) * IDT_SIZE) - 1;
 	idt_ptr.base = (unsigned int)&IDT;
-	// kernel crashes at load_idt, proven by bochs
 	load_idt((unsigned int*) &idt_ptr);
 }
 
@@ -88,7 +98,6 @@ void handle_keyboard_interrupt() {
 		if (keycode < 128) {  // Valid keycode range
 			char key = kbdus[keycode];
 			//k_put_char(key, 0, 8, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));  // Print the character
-			//print_hex(keycode, 0, 9, make_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK));
 		}
 	}
 	return;
@@ -100,12 +109,15 @@ void main() {
 	enable_interrupts();
 	screen_init();
 
-	// removed to test only the single plot_pixel function just below
-	for(int i = 0; i < 199; i++) {
-		for(int j = 0; j < 320; j++) {
-			plot_pixel(j, i, VGA_RED);
+	// Print the letter 'A' on the screen
+	for(int i = 0; i < 8; i++) {
+		for(int j = 0; j < 8; j++) {
+			if((letter_a[i] >> j) & 1) {
+				plot_pixel(j, i, VGA_WHITE);
+			}
 		}
 	}
+
 	while (true) {}  // Infinite loop to prevent the program from exiting
 }
 

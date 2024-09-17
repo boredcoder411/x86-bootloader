@@ -16,9 +16,14 @@
 #define PALETTE_WRITE 0x3C8
 #define PALETTE_DATA 0x3C9
 
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 200
+
 // Function prototypes
 void k_put_char(char c, int x, int y, unsigned char color);
 void k_put_string(const char* str, int start_x, int start_y, unsigned char color);
 void k_clear_screen(char color);
 void plot_pixel(int x, int y, char color);
 void screen_init();
+void swap_buffers();
+void clear_buffer();

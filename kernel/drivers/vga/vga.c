@@ -1,6 +1,8 @@
 #include "vga.h"
 #include "../io/io.h"
 
+unsigned char back_buf[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 void screen_init() {
 	// configure palette with 8-bit RRRGGGBB color
 	ioport_out(PALETTE_MASK, 0xFF);
@@ -15,6 +17,8 @@ void screen_init() {
 	ioport_out(PALETTE_DATA, 0x3F);
 	ioport_out(PALETTE_DATA, 0x3F);
 	ioport_out(PALETTE_DATA, 0x3F);
+
+	clear_buffer();
 }
 
 void plot_pixel(int pos_x, int pos_y, char color) {
@@ -40,3 +44,19 @@ void int_to_hex(unsigned int value, char* buffer) {
     buffer[1] = hex_digits[value & 0xF];        // Low nibble
     buffer[2] = '\0'; // Null-terminate the string
 }*/
+
+void clear_buffer() {
+	for (int y = 0; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			back_buf[y][x] = VGA_BLACK;
+		}
+	}
+}
+
+void swap_buffers() {
+	for (int y = 0; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			plot_pixel(x, y, back_buf[y][x]);
+		}
+	}
+}
